@@ -1,26 +1,16 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { getStorage } from "firebase/storage";
-
-// ------------------------------------------------------------------
-// IMPORTANT : REMPLACEZ CECI PAR VOS CLES FIREBASE
-// ------------------------------------------------------------------
-// 1. Allez sur https://console.firebase.google.com/
-// 2. Créez un projet "Tassili"
-// 3. Cliquez sur l'icône Web (</>) pour ajouter une app
-// 4. Copiez la "firebaseConfig" et collez-la ci-dessous :
 
 const firebaseConfig = {
-    apiKey: "REMPLACER_PAR_VOTRE_API_KEY",
+    apiKey: "AIzaSyDV1brpM1xNgenXDTVWzpprsIYwSB1iS28",
     authDomain: "tassili-reception.firebaseapp.com",
     projectId: "tassili-reception",
-    storageBucket: "tassili-reception.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef123456"
+    storageBucket: "tassili-reception.firebasestorage.app",
+    messagingSenderId: "556472355516",
+    appId: "1:556472355516:web:dbb73e02b2d3f8c60ddeb9"
 };
 
+// Initialisation
 const app = initializeApp(firebaseConfig);
+// C'est cet objet "db" qui nous permettra de parler à votre base de données
 export const db = getFirestore(app);
-export const auth = getAuth(app);
-export const storage = getStorage(app);
