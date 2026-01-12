@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { FileText, Download, Share2, Search, Calendar } from 'lucide-react';
+import { FileText, Download, Search, Calendar, StickyNote, User } from 'lucide-react';
 import { Parser } from 'json2csv';
 
 export default function Visits() {
@@ -21,27 +21,23 @@ export default function Visits() {
         return () => unsubscribe();
     }, []);
 
-    // 2. FONCTION DE SAUVEGARDE (EXPORT EXCEL/CSV)
+    // 2. EXPORT EXCEL (INCLUANT LES NOTES)
     const exportToDriveBackup = () => {
         try {
-            const fields = ['clientName', 'clientPhone', 'eventDate', 'totalAmount', 'status'];
+            const fields = ['clientName', 'clientPhone', 'eventDate', 'totalAmount', 'notes', 'status'];
             const opts = { fields };
             const parser = new Parser(opts);
             const csv = parser.parse(contracts);
 
-            // Création du fichier téléchargeable
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement("a");
             const url = URL.createObjectURL(blob);
 
             link.setAttribute("href", url);
-            link.setAttribute("download", `Sauvegarde_Tassili_${new Date().toLocaleDateString()}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
+            link.setAttribute("download", `Archive_Tassili_${new Date().toLocaleDateString()}.csv`);
             link.click();
-            document.body.removeChild(link);
 
-            alert("✅ Fichier de sauvegarde généré ! Vous pouvez le glisser dans votre Google Drive.");
+            alert("✅ Archive générée avec succès !");
         } catch (err) {
             console.error(err);
             alert("Erreur lors de l'export");
@@ -58,19 +54,19 @@ export default function Visits() {
                 <h1 className="text-3xl font-bold">Gestion des Visites</h1>
                 <button
                     onClick={exportToDriveBackup}
-                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all"
+                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all shadow-lg"
                 >
-                    <Download size={20} /> Sauvegarde Drive
+                    <Download size={20} /> Export Drive
                 </button>
             </div>
 
-            {/* BARRE DE RECHERCHE */}
-            <div className="relative mb-6">
+            {/* RECHERCHE */}
+            <div className="relative mb-8">
                 <Search className="absolute left-3 top-3 text-slate-500" size={20} />
                 <input
                     type="text"
                     placeholder="Rechercher un client..."
-                    className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-12 pr-4 focus:border-blue-500 outline-none"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pl-12 pr-4 outline-none focus:border-blue-500"
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
             </div>
@@ -78,21 +74,37 @@ export default function Visits() {
             {/* LISTE DES CONTRATS */}
             <div className="grid gap-4">
                 {filteredContracts.map((contract) => (
-                    <div key={contract.id} className="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex justify-between items-center">
-                        <div>
-                            <h3 className="font-bold text-lg text-blue-400">{contract.clientName}</h3>
-                            <div className="flex gap-4 text-sm text-slate-400 mt-1">
-                                <span className="flex items-center gap-1"><Calendar size={14} /> {contract.eventDate}</span>
-                                <span className="font-bold text-white">{contract.totalAmount}€</span>
+                    <div key={contract.id} className="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-sm">
+                        <div className="flex justify-between items-start mb-3">
+                            <div>
+                                <h3 className="font-bold text-xl text-blue-400 flex items-center gap-2">
+                                    <User size={18} className="text-slate-500" /> {contract.clientName}
+                                </h3>
+                                <div className="flex gap-4 text-sm text-slate-400 mt-1">
+                                    <span className="flex items-center gap-1"><Calendar size={14} /> {contract.eventDate || 'Date non définie'}</span>
+                                    <span className="font-bold text-white bg-slate-700 px-2 rounded">{contract.totalAmount}€</span>
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex gap-2">
                             <button className="p-2 bg-slate-700 rounded-lg hover:bg-blue-600 transition-colors">
                                 <FileText size={20} />
                             </button>
                         </div>
+
+                        {/* AFFICHAGE DES NOTES */}
+                        {contract.notes && (
+                            <div className="mt-4 p-3 bg-slate-900/50 rounded-xl border-l-4 border-blue-500 flex gap-2 items-start">
+                                <StickyNote size={16} className="text-blue-500 mt-1 flex-shrink-0" />
+                                <p className="text-sm text-slate-300 italic">"{contract.notes}"</p>
+                            </div>
+                        )}
                     </div>
                 ))}
+
+                {filteredContracts.length === 0 && (
+                    <div className="text-center py-20 text-slate-500">
+                        Aucun contrat trouvé.
+                    </div>
+                )}
             </div>
         </div>
     );
