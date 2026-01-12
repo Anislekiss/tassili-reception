@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply antialiased text-white bg-[#0f1021];
+    /* Fond très sombre par défaut */
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply text-base text-white bg-white/10 border-white/10 placeholder-white/30 focus:border-white/50 focus:ring-0;
+  }
+}
+
+@layer utilities {
+
+  /* THE CLEANMYMAC GLASS EFFECT */
+  .glass-panel {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-md border border-white/5 shadow-lg hover:bg-white/10 transition-all duration-300;
+  }
+
+  .glass-button {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 hover:bg-white/20 active:scale-95 transition-all;
+  }
+
+  /* TEXT GRADIENTS */
+  .text-gradient {
+    @apply bg-gradient-to-r from-blue-300 via-indigo-300 to-purple-300 bg-clip-text text-transparent;
+  }
+
+  /* SCROLLBAR */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* ANIMATED BACKGROUND GRAIN */
+  .bg-grain {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+    pointer-events: none;
+  }
+}
+
+/* Animations Glow */
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 0 40px rgba(99, 102, 241, 0.5);
+  }
+}
+
+.glow-active {
+  animation: pulse-glow 3s infinite;
+}
