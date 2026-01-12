@@ -1,104 +1,110 @@
 import React, { useState, useMemo } from 'react';
 import { db } from '../lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { Save, User, Phone, StickyNote, Utensils, Home, Camera, Music, Flower2 } from 'lucide-react';
+import { Save, Utensils, Home, Camera, Music, Flower2 } from 'lucide-react';
 
 export default function NewContract() {
-    const [localClient, setLocalClient] = useState({ name: '', phone: '', notes: '' });
+    const [localClient, setLocalClient] = useState({ name: '', notes: '' });
     const [adults, setAdults] = useState(0);
     const [children, setChildren] = useState(0);
     const [selectedMenu, setSelectedMenu] = useState(null);
     const [selectedRoom, setSelectedRoom] = useState(null);
     const [selectedOptions, setSelectedOptions] = useState([]);
 
-    // --- VOS VRAIES DONNÉES ---
+    // --- CONFIGURATION AVEC VOS IMAGES ---
     const menus = [
-        { id: 'buffet', label: 'Buffet Prestige', price: 45, icon: <Utensils size={20} /> },
-        { id: 'assiette', label: 'Service Assiette', price: 65, icon: <Utensils size={20} /> }
-    ];
-    const rooms = [
-        { id: 'tassili', label: 'Salle Tassili', price: 1500, icon: <Home size={20} /> },
-        { id: 'atlas', label: 'Salle Atlas', price: 1200, icon: <Home size={20} /> }
-    ];
-    const extras = [
-        { id: 'deco', label: 'Décoration', price: 300, icon: <Flower2 size={20} /> },
-        { id: 'dj', label: 'Animation DJ', price: 500, icon: <Music size={20} /> },
-        { id: 'photo', label: 'Photographe', price: 450, icon: <Camera size={20} /> }
+        { id: 'buffet', label: 'Buffet Prestige', price: 45, image: 'https://images.unsplash.com/photo-1555244162-803834f70033?w=400' },
+        { id: 'assiette', label: 'Service Assiette', price: 65, image: 'https://images.unsplash.com/photo-1544148103-0773bf10d330?w=400' }
     ];
 
-    const totalHT = useMemo(() => {
+    const rooms = [
+        { id: 'tassili', label: 'Salle Tassili', price: 1500, image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=400' },
+        { id: 'atlas', label: 'Salle Atlas', price: 1200, image: 'https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=400' }
+    ];
+
+    // --- LOGIQUE DE CALCUL ---
+    const totalAmount = useMemo(() => {
         let total = (Number(adults) * (selectedMenu?.price || 0)) + (Number(children) * 15);
         if (selectedRoom) total += selectedRoom.price;
         selectedOptions.forEach(opt => total += opt.price);
         return total;
     }, [adults, children, selectedMenu, selectedRoom, selectedOptions]);
 
-    const toggleOption = (opt) => {
-        setSelectedOptions(prev => prev.find(o => o.id === opt.id) ? prev.filter(o => o.id !== opt.id) : [...prev, opt]);
-    };
-
-    const saveContract = async () => {
-        if (!localClient.name) return alert("Nom du client obligatoire");
+    const saveToFirebase = async () => {
+        if (!localClient.name) return alert("Veuillez saisir le nom du client");
         try {
             await addDoc(collection(db, "contracts"), {
-                ...localClient, adults, children,
-                total: totalHT, createdAt: serverTimestamp()
+                clientName: localClient.name,
+                notes: localClient.notes,
+                totalAmount,
+                status: 'Visite',
+                createdAt: serverTimestamp()
             });
             alert("✅ Devis enregistré !");
-        } catch (e) { alert("Erreur lors de l'enregistrement"); }
+        } catch (e) { alert("Erreur de connexion"); }
     };
 
     return (
-        <div className="p-4 bg-slate-950 min-h-screen text-white pb-40">
-            <h1 className="text-2xl font-bold mb-6 text-blue-400">Nouveau Contrat</h1>
+        <div className="p-6 bg-slate-950 min-h-screen text-white pb-40">
+            <h1 className="text-3xl font-bold mb-8 text-blue-400">Nouveau Contrat</h1>
 
-            {/* SAISIE TEXTE FLUIDE */}
-            <div className="grid gap-3 mb-6">
-                <input placeholder="Nom du Client" className="bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-blue-500" value={localClient.name} onChange={e => setLocalClient({ ...localClient, name: e.target.value })} />
-                <textarea placeholder="Notes particulières..." className="bg-slate-900 p-4 rounded-xl border border-slate-800 outline-none focus:border-blue-500" value={localClient.notes} onChange={e => setLocalClient({ ...localClient, notes: e.target.value })} />
+            {/* CHAMPS TEXTE */}
+            <div className="grid gap-4 mb-10">
+                <input
+                    placeholder="Nom du Client"
+                    className="bg-slate-900/50 p-5 rounded-2xl border border-slate-800 outline-none focus:border-blue-500 text-lg"
+                    value={localClient.name}
+                    onChange={e => setLocalClient({ ...localClient, name: e.target.value })}
+                />
+                <textarea
+                    placeholder="Notes particulières..."
+                    className="bg-slate-900/50 p-5 rounded-2xl border border-slate-800 outline-none focus:border-blue-500 h-32"
+                    value={localClient.notes}
+                    onChange={e => setLocalClient({ ...localClient, notes: e.target.value })}
+                />
             </div>
 
-            {/* INVITÉS */}
-            <div className="flex gap-4 mb-8">
-                <div className="flex-1 bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                    <p className="text-xs text-slate-500 mb-1 font-bold">ADULTES</p>
-                    <input type="number" className="bg-transparent text-2xl font-bold w-full text-center outline-none text-blue-400" value={adults} onChange={e => setAdults(e.target.value)} />
-                </div>
-                <div className="flex-1 bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
-                    <p className="text-xs text-slate-500 mb-1 font-bold">ENFANTS (15€)</p>
-                    <input type="number" className="bg-transparent text-2xl font-bold w-full text-center outline-none text-purple-400" value={children} onChange={e => setChildren(e.target.value)} />
-                </div>
-            </div>
-
-            {/* MENUS TRAITEUR */}
-            <h2 className="text-slate-500 text-sm font-bold mb-4 uppercase tracking-wider">Menus Traiteur</h2>
-            <div className="flex flex-wrap gap-3 mb-8">
+            {/* SÉLECTION MENUS AVEC PHOTOS */}
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2"><Utensils className="text-blue-500" /> Menus Traiteur</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
                 {menus.map(m => (
-                    <button key={m.id} onClick={() => setSelectedMenu(m)} className={`px-6 py-4 rounded-2xl border transition-all flex items-center gap-3 ${selectedMenu?.id === m.id ? 'bg-blue-600 border-blue-400 shadow-lg shadow-blue-900/20' : 'bg-slate-900 border-slate-800 text-slate-400'}`}>
-                        {m.icon} <span className="font-bold">{m.label}</span>
+                    <button
+                        key={m.id}
+                        onClick={() => setSelectedMenu(m)}
+                        className={`relative overflow-hidden rounded-3xl aspect-square border-4 transition-all ${selectedMenu?.id === m.id ? 'border-blue-500 scale-105 shadow-xl shadow-blue-500/20' : 'border-transparent opacity-60'}`}
+                    >
+                        <img src={m.image} alt={m.label} className="absolute inset-0 w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+                            <p className="font-bold text-sm">{m.label}</p>
+                        </div>
                     </button>
                 ))}
             </div>
 
-            {/* SALLES ET OPTIONS */}
-            <h2 className="text-slate-500 text-sm font-bold mb-4 uppercase tracking-wider">Salles & Options</h2>
-            <div className="flex flex-wrap gap-3">
+            {/* SÉLECTION SALLES AVEC PHOTOS */}
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2"><Home className="text-purple-500" /> Nos Salles</h2>
+            <div className="grid grid-cols-2 gap-4 mb-10">
                 {rooms.map(r => (
-                    <button key={r.id} onClick={() => setSelectedRoom(r)} className={`px-6 py-4 rounded-2xl border transition-all flex items-center gap-3 ${selectedRoom?.id === r.id ? 'bg-purple-600 border-purple-400 shadow-lg shadow-purple-900/20' : 'bg-slate-900 border-slate-800 text-slate-400'}`}>
-                        {r.icon} <span className="font-bold">{r.label}</span>
-                    </button>
-                ))}
-                {extras.map(e => (
-                    <button key={e.id} onClick={() => toggleOption(e)} className={`px-6 py-4 rounded-2xl border transition-all flex items-center gap-3 ${selectedOptions.find(o => o.id === e.id) ? 'bg-emerald-600 border-emerald-400 shadow-lg shadow-emerald-900/20' : 'bg-slate-900 border-slate-800 text-slate-400'}`}>
-                        {e.icon} <span className="font-bold">{e.label}</span>
+                    <button
+                        key={r.id}
+                        onClick={() => setSelectedRoom(r)}
+                        className={`relative h-40 overflow-hidden rounded-3xl border-4 transition-all ${selectedRoom?.id === r.id ? 'border-purple-500 scale-105 shadow-xl shadow-purple-500/20' : 'border-transparent opacity-60'}`}
+                    >
+                        <img src={r.image} alt={r.label} className="absolute inset-0 w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center p-4">
+                            <p className="font-extrabold text-xl uppercase tracking-widest">{r.label}</p>
+                        </div>
                     </button>
                 ))}
             </div>
 
-            {/* BOUTON D'ENREGISTREMENT FIXE */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 bg-slate-950/90 backdrop-blur-md border-t border-slate-900">
-                <button onClick={saveContract} className="w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-bold text-xl transition-all active:scale-95 shadow-2xl">
-                    ENREGISTRER LE DEVIS ({totalHT}€)
+            {/* BOUTON FIXE */}
+            <div className="fixed bottom-0 left-0 right-0 p-6 bg-slate-950/80 backdrop-blur-xl border-t border-slate-900">
+                <button
+                    onClick={saveToFirebase}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 py-6 rounded-2xl font-black text-2xl shadow-2xl active:scale-95 transition-all"
+                >
+                    ENREGISTRER ({totalAmount}€)
                 </button>
             </div>
         </div>
